@@ -24,20 +24,20 @@ class Elbow extends Pipe {
             case 0:
                 context.translate(this.xOffset, this.yOffset);
                 break;
-            // Left-Bottom.
-            case 1:
-                context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
-                context.rotate(Math.PI * 1.5);
-                break;
             // Right-Top.
-            case 2:
+            case 1:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
                 break;
             // Right-Bottom.
-            case 3:
+            case 2:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset + config.CELL_SIZE);
                 context.rotate(Math.PI);
+                break;
+            // Left-Bottom.
+            case 3:
+                context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
+                context.rotate(Math.PI * 1.5);
         }
 
         // Stroke the elbow.

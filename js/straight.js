@@ -23,12 +23,12 @@ class Straight extends Pipe {
         switch(this.rotation) {
             // Horizontal straight.
             case 0:
-            case 1:
+            case 2:
                 context.translate(this.xOffset, this.yOffset);
                 break;
 
             // Vertical straight.
-            case 2:
+            case 1:
             case 3:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);

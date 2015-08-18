@@ -7,7 +7,35 @@ window.onload = function () {
     new GameManager();
 };
 
-},{"./game_manager":4}],2:[function(require,module,exports){
+},{"./game_manager":5}],2:[function(require,module,exports){
+'use strict';
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var ClickManager = (function () {
+    function ClickManager(pipes) {
+        _classCallCheck(this, ClickManager);
+
+        this.canvas = document.getElementById('game-canvas');
+
+        this.pipes = pipes;
+
+        this.canvas.addEventListener('click', this.handleClick.bind(this), false);
+    }
+
+    ClickManager.prototype.handleClick = function handleClick(e) {
+        var col = Math.floor((e.pageX - this.canvas.offsetLeft) / 50);
+        var row = Math.floor((e.pageY - this.canvas.offsetTop) / 50);
+
+        this.pipes.cells[col][row].rotate();
+    };
+
+    return ClickManager;
+})();
+
+module.exports = ClickManager;
+
+},{}],3:[function(require,module,exports){
 "use strict";
 
 module.exports = {
@@ -16,7 +44,7 @@ module.exports = {
     CELL_SIZE: 50
 };
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -53,20 +81,20 @@ var Elbow = (function (_Pipe) {
             case 0:
                 context.translate(this.xOffset, this.yOffset);
                 break;
-            // Left-Bottom.
-            case 1:
-                context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
-                context.rotate(Math.PI * 1.5);
-                break;
             // Right-Top.
-            case 2:
+            case 1:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
                 break;
             // Right-Bottom.
-            case 3:
+            case 2:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset + config.CELL_SIZE);
                 context.rotate(Math.PI);
+                break;
+            // Left-Bottom.
+            case 3:
+                context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
+                context.rotate(Math.PI * 1.5);
         }
 
         // Stroke the elbow.
@@ -85,7 +113,7 @@ var Elbow = (function (_Pipe) {
 
 module.exports = Elbow;
 
-},{"./config":2,"./pipe":6}],4:[function(require,module,exports){
+},{"./config":3,"./pipe":7}],5:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -93,6 +121,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Grid = require('./grid');
 var Pipes = require('./pipes');
 var RenderManager = require('./render_manager');
+var ClickManager = require('./click_manager');
 
 var GameManager = function GameManager() {
     _classCallCheck(this, GameManager);
@@ -100,12 +129,13 @@ var GameManager = function GameManager() {
     this.grid = new Grid();
     this.pipes = new Pipes();
 
-    this.RenderManager = new RenderManager(this.grid, this.pipes);
+    this.renderManager = new RenderManager(this.grid, this.pipes);
+    this.clickManager = new ClickManager(this.pipes);
 };
 
 module.exports = GameManager;
 
-},{"./grid":5,"./pipes":7,"./render_manager":8}],5:[function(require,module,exports){
+},{"./click_manager":2,"./grid":6,"./pipes":8,"./render_manager":9}],6:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -169,7 +199,7 @@ var Grid = (function () {
 
 module.exports = Grid;
 
-},{"./config":2}],6:[function(require,module,exports){
+},{"./config":3}],7:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -196,12 +226,16 @@ var Pipe = (function () {
         this.rotation = Math.floor(Math.random() * 4);
     };
 
+    Pipe.prototype.rotate = function rotate() {
+        this.rotation = ++this.rotation % 4;
+    };
+
     return Pipe;
 })();
 
 module.exports = Pipe;
 
-},{"./config":2}],7:[function(require,module,exports){
+},{"./config":3}],8:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -255,7 +289,7 @@ var Pipes = (function () {
 
 module.exports = Pipes;
 
-},{"./config":2,"./elbow":3,"./straight":9}],8:[function(require,module,exports){
+},{"./config":3,"./elbow":4,"./straight":10}],9:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -292,7 +326,7 @@ var RenderManager = (function () {
 
 module.exports = RenderManager;
 
-},{"./config":2}],9:[function(require,module,exports){
+},{"./config":3}],10:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -328,12 +362,12 @@ var Straight = (function (_Pipe) {
         switch (this.rotation) {
             // Horizontal straight.
             case 0:
-            case 1:
+            case 2:
                 context.translate(this.xOffset, this.yOffset);
                 break;
 
             // Vertical straight.
-            case 2:
+            case 1:
             case 3:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
@@ -355,4 +389,4 @@ var Straight = (function (_Pipe) {
 
 module.exports = Straight;
 
-},{"./config":2,"./pipe":6}]},{},[1]);
+},{"./config":3,"./pipe":7}]},{},[1]);

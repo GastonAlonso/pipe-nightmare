@@ -17,6 +17,10 @@ class Pipe {
     setInitialRotation() {
         this.rotation = Math.floor(Math.random() * 4);
     }
+
+    rotate() {
+        this.rotation = ++this.rotation % 4;
+    }
 }
 
 module.exports = Pipe;
