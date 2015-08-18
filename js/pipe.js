@@ -6,11 +6,16 @@ class Pipe {
         this.row = row;
 
         this.calculateOffsets();
+        this.setInitialRotation();
     }
 
     calculateOffsets() {
         this.xOffset = this.col * config.CELL_SIZE;
         this.yOffset = this.row * config.CELL_SIZE;
+    }
+
+    setInitialRotation() {
+        this.rotation = Math.floor(Math.random() * 4);
     }
 }
 

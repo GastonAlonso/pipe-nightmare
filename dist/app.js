@@ -24,6 +24,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Pipe = require('./pipe');
+var config = require('./config');
 
 var Elbow = (function (_Pipe) {
     _inherits(Elbow, _Pipe);
@@ -32,68 +33,51 @@ var Elbow = (function (_Pipe) {
         _classCallCheck(this, Elbow);
 
         _Pipe.call(this, col, row);
-
-        this.setInitialRotation();
     }
 
-    Elbow.prototype.setInitialRotation = function setInitialRotation() {
-        var random = Math.random();
-
-        if (random >= 0 && random < 0.25) {
-            this.rotation = 'left-top';
-        } else if (random >= 0.25 && random < 0.5) {
-            this.rotation = 'left-bottom';
-        } else if (random >= 0.5 && random < 0.75) {
-            this.rotation = 'right-top';
-        } else if (random >= 0.75 && random <= 1) {
-            this.rotation = 'right-bottom';
-        }
-    };
-
     Elbow.prototype.render = function render(context) {
+        // Create an elbow pipe;
         var pipe = new Path2D();
 
-        if (this.rotation === 'left-top') {
-            // Draw the elbow.
-            pipe.arc(this.xOffset + 5, this.yOffset + 5, 8, 0, Math.PI / 2, false);
-            pipe.moveTo(this.xOffset + 35, this.yOffset + 5);
-            pipe.arc(this.xOffset + 5, this.yOffset + 5, 30, 0, Math.PI / 2, false);
-            context.stroke(pipe);
+        // Draw the elbow.
+        pipe.arc(5, 5, 8, 0, Math.PI / 2, false);
+        pipe.moveTo(35, 5);
+        pipe.arc(5, 5, 30, 0, Math.PI / 2, false);
 
-            // Draw the pipe couplings.
-            context.strokeRect(this.xOffset + 0, this.yOffset + 10, 5, 30);
-            context.strokeRect(this.xOffset + 10, this.yOffset + 0, 30, 5);
-        } else if (this.rotation === 'left-bottom') {
-            // Draw the elbow.
-            pipe.arc(this.xOffset + 5, this.yOffset + 45, 8, Math.PI * 1.5, 0, false);
-            pipe.moveTo(this.xOffset + 5, this.yOffset + 15);
-            pipe.arc(this.xOffset + 5, this.yOffset + 45, 30, Math.PI * 1.5, 0, false);
-            context.stroke(pipe);
+        // Save the context before setting translation and rotation.
+        context.save();
 
-            // Draw the pipe couplings.
-            context.strokeRect(this.xOffset + 0, this.yOffset + 10, 5, 30);
-            context.strokeRect(this.xOffset + 10, this.yOffset + 45, 30, 5);
-        } else if (this.rotation === 'right-top') {
-            // Draw the elbow.
-            pipe.arc(this.xOffset + 45, this.yOffset + 5, 8, Math.PI / 2, Math.PI, false);
-            pipe.moveTo(this.xOffset + 45, this.yOffset + 35);
-            pipe.arc(this.xOffset + 45, this.yOffset + 5, 30, Math.PI / 2, Math.PI, false);
-            context.stroke(pipe);
-
-            // Draw the pipe couplings.
-            context.strokeRect(this.xOffset + 10, this.yOffset + 0, 30, 5);
-            context.strokeRect(this.xOffset + 45, this.yOffset + 10, 5, 30);
-        } else if (this.rotation === 'right-bottom') {
-            // Draw the elbow.
-            pipe.arc(this.xOffset + 45, this.yOffset + 45, 8, Math.PI, Math.PI * 1.5, false);
-            pipe.moveTo(this.xOffset + 15, this.yOffset + 45);
-            pipe.arc(this.xOffset + 45, this.yOffset + 45, 30, Math.PI, Math.PI * 1.5, false);
-            context.stroke(pipe);
-
-            // Draw the pipe couplings.
-            context.strokeRect(this.xOffset + 45, this.yOffset + 10, 5, 30);
-            context.strokeRect(this.xOffset + 10, this.yOffset + 45, 30, 5);
+        // Set the rotation and offset.
+        switch (this.rotation) {
+            // Left-Top.
+            case 0:
+                context.translate(this.xOffset, this.yOffset);
+                break;
+            // Left-Bottom.
+            case 1:
+                context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
+                context.rotate(Math.PI * 1.5);
+                break;
+            // Right-Top.
+            case 2:
+                context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
+                context.rotate(Math.PI / 2);
+                break;
+            // Right-Bottom.
+            case 3:
+                context.translate(this.xOffset + config.CELL_SIZE, this.yOffset + config.CELL_SIZE);
+                context.rotate(Math.PI);
         }
+
+        // Stroke the elbow.
+        context.stroke(pipe);
+
+        // Draw the pipe couplings.
+        context.strokeRect(0, 10, 5, 30);
+        context.strokeRect(10, 0, 30, 5);
+
+        // Restore context to default translation and rotation.
+        context.restore();
     };
 
     return Elbow;
@@ -101,7 +85,7 @@ var Elbow = (function (_Pipe) {
 
 module.exports = Elbow;
 
-},{"./pipe":6}],4:[function(require,module,exports){
+},{"./config":2,"./pipe":6}],4:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -200,11 +184,16 @@ var Pipe = (function () {
         this.row = row;
 
         this.calculateOffsets();
+        this.setInitialRotation();
     }
 
     Pipe.prototype.calculateOffsets = function calculateOffsets() {
         this.xOffset = this.col * config.CELL_SIZE;
         this.yOffset = this.row * config.CELL_SIZE;
+    };
+
+    Pipe.prototype.setInitialRotation = function setInitialRotation() {
+        this.rotation = Math.floor(Math.random() * 4);
     };
 
     return Pipe;
@@ -311,6 +300,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var Pipe = require('./pipe');
+var config = require('./config');
 
 var Straight = (function (_Pipe) {
     _inherits(Straight, _Pipe);
@@ -319,47 +309,45 @@ var Straight = (function (_Pipe) {
         _classCallCheck(this, Straight);
 
         _Pipe.call(this, col, row);
-
-        this.setInitialRotation();
     }
 
-    Straight.prototype.setInitialRotation = function setInitialRotation() {
-        var random = Math.random();
-
-        if (random >= 0 && random < 0.5) {
-            this.rotation = 'horizontal';
-        } else {
-            this.rotation = 'vertical';
-        }
-    };
-
     Straight.prototype.render = function render(context) {
-        // Create a horizontal straight;
+        // Create a straight pipe;
         var pipe = new Path2D();
 
-        if (this.rotation === 'horizontal') {
-            // Draw the elbow.
-            pipe.moveTo(this.xOffset + 5, this.yOffset + 15);
-            pipe.lineTo(this.xOffset + 45, this.yOffset + 15);
-            pipe.moveTo(this.xOffset + 5, this.yOffset + 35);
-            pipe.lineTo(this.xOffset + 45, this.yOffset + 35);
-            context.stroke(pipe);
+        // Draw the straight.
+        pipe.moveTo(5, 15);
+        pipe.lineTo(45, 15);
+        pipe.moveTo(5, 35);
+        pipe.lineTo(45, 35);
 
-            // Draw the pipe couplings.
-            context.strokeRect(this.xOffset + 0, this.yOffset + 10, 5, 30);
-            context.strokeRect(this.xOffset + 45, this.yOffset + 10, 5, 30);
-        } else if (this.rotation === 'vertical') {
-            // Draw the elbow.
-            pipe.moveTo(this.xOffset + 15, this.yOffset + 5);
-            pipe.lineTo(this.xOffset + 15, this.yOffset + 45);
-            pipe.moveTo(this.xOffset + 35, this.yOffset + 5);
-            pipe.lineTo(this.xOffset + 35, this.yOffset + 45);
-            context.stroke(pipe);
+        // Save the context before setting translation and rotation.
+        context.save();
 
-            // Draw the pipe couplings.
-            context.strokeRect(this.xOffset + 10, this.yOffset + 0, 30, 5);
-            context.strokeRect(this.xOffset + 10, this.yOffset + 45, 30, 5);
+        // Set the rotation and offset.
+        switch (this.rotation) {
+            // Horizontal straight.
+            case 0:
+            case 1:
+                context.translate(this.xOffset, this.yOffset);
+                break;
+
+            // Vertical straight.
+            case 2:
+            case 3:
+                context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
+                context.rotate(Math.PI / 2);
         }
+
+        // Stroke the straight.
+        context.stroke(pipe);
+
+        // Stroke the pipe couplings.
+        context.strokeRect(0, 10, 5, 30);
+        context.strokeRect(45, 10, 5, 30);
+
+        // Restore context to default translation and rotation.
+        context.restore();
     };
 
     return Straight;
@@ -367,4 +355,4 @@ var Straight = (function (_Pipe) {
 
 module.exports = Straight;
 
-},{"./pipe":6}]},{},[1]);
+},{"./config":2,"./pipe":6}]},{},[1]);
