@@ -41,8 +41,17 @@ class Straight extends Pipe {
         context.strokeRect(0, 10, 5, 30);
         context.strokeRect(45, 10, 5, 30);
 
+        this.renderWaterLevel(context);
+
         // Restore context to default translation and rotation.
         context.restore();
+    }
+
+    renderWaterLevel(context) {
+        if (this.water > 0) {
+            context.fillStyle = 'rgb(51, 204, 255)';
+            context.fillRect(6, 16, (38 * this.water) / 100, 18);
+        }
     }
 }
 

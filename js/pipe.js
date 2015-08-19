@@ -5,8 +5,11 @@ class Pipe {
         this.col = col;
         this.row = row;
 
+        this.water = 0;
+
         this.calculateOffsets();
         this.setInitialRotation();
+        this.fillWithWater();
     }
 
     calculateOffsets() {
@@ -18,8 +21,20 @@ class Pipe {
         this.rotation = Math.floor(Math.random() * 4);
     }
 
+    fillWithWater() {
+        let waterFill = setInterval(() => {
+            this.water += 10;
+
+            if (this.water === 100) {
+                clearInterval(waterFill);
+            }
+        }, 1000);
+    }
+
     rotate() {
-        this.rotation = ++this.rotation % 4;
+        if (this.water === 0) {
+            this.rotation = ++this.rotation % 4;
+        }
     }
 }
 

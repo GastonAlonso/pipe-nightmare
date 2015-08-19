@@ -47,8 +47,21 @@ class Elbow extends Pipe {
         context.strokeRect(0, 10, 5, 30);
         context.strokeRect(10, 0, 30, 5);
 
+        this.renderWaterLevel(context);
+
         // Restore context to default translation and rotation.
         context.restore();
+    }
+
+    renderWaterLevel(context) {
+        if (this.water > 0) {
+            context.fillStyle = 'rgb(51, 204, 255)';
+
+            context.beginPath();
+            context.arc(6, 6, 7, 0, (Math.PI / 2 * this.water) / 100, false);
+            context.arc(6, 6, 28, (Math.PI / 2 * this.water) / 100, 0, true);
+            context.fill();
+        }
     }
 }
 

@@ -104,8 +104,21 @@ var Elbow = (function (_Pipe) {
         context.strokeRect(0, 10, 5, 30);
         context.strokeRect(10, 0, 30, 5);
 
+        this.renderWaterLevel(context);
+
         // Restore context to default translation and rotation.
         context.restore();
+    };
+
+    Elbow.prototype.renderWaterLevel = function renderWaterLevel(context) {
+        if (this.water > 0) {
+            context.fillStyle = 'rgb(51, 204, 255)';
+
+            context.beginPath();
+            context.arc(6, 6, 7, 0, Math.PI / 2 * this.water / 100, false);
+            context.arc(6, 6, 28, Math.PI / 2 * this.water / 100, 0, true);
+            context.fill();
+        }
     };
 
     return Elbow;
@@ -213,8 +226,11 @@ var Pipe = (function () {
         this.col = col;
         this.row = row;
 
+        this.water = 0;
+
         this.calculateOffsets();
         this.setInitialRotation();
+        this.fillWithWater();
     }
 
     Pipe.prototype.calculateOffsets = function calculateOffsets() {
@@ -226,8 +242,22 @@ var Pipe = (function () {
         this.rotation = Math.floor(Math.random() * 4);
     };
 
+    Pipe.prototype.fillWithWater = function fillWithWater() {
+        var _this = this;
+
+        var waterFill = setInterval(function () {
+            _this.water += 10;
+
+            if (_this.water === 100) {
+                clearInterval(waterFill);
+            }
+        }, 1000);
+    };
+
     Pipe.prototype.rotate = function rotate() {
-        this.rotation = ++this.rotation % 4;
+        if (this.water === 0) {
+            this.rotation = ++this.rotation % 4;
+        }
     };
 
     return Pipe;
@@ -296,6 +326,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var config = require('./config');
 
+var FPS = 5;
+var FPS_INTERVAL = 1000 / FPS;
+var startTime;
+
 var RenderManager = (function () {
     function RenderManager(grid, pipes) {
         _classCallCheck(this, RenderManager);
@@ -305,20 +339,28 @@ var RenderManager = (function () {
         this.grid = grid;
         this.pipes = pipes;
 
-        window.requestAnimationFrame(this.render.bind(this));
+        startTime = Date.now();
+        this.render();
     }
 
     RenderManager.prototype.render = function render() {
-        var context = this.canvas.getContext('2d');
-
-        // Clear canvas.
-        context.clearRect(0, 0, config.GRID_WIDTH, config.GRID_HEIGHT);
-
-        // Render all modules.
-        this.grid.render(context);
-        this.pipes.render(context);
-
         window.requestAnimationFrame(this.render.bind(this));
+
+        var now = Date.now();
+        var elapsed = now - startTime;
+
+        if (elapsed > FPS_INTERVAL) {
+            startTime = now - elapsed % FPS_INTERVAL;
+
+            var context = this.canvas.getContext('2d');
+
+            // Clear canvas.
+            context.clearRect(0, 0, config.GRID_WIDTH, config.GRID_HEIGHT);
+
+            // Render all modules.
+            this.grid.render(context);
+            this.pipes.render(context);
+        }
     };
 
     return RenderManager;
@@ -380,8 +422,17 @@ var Straight = (function (_Pipe) {
         context.strokeRect(0, 10, 5, 30);
         context.strokeRect(45, 10, 5, 30);
 
+        this.renderWaterLevel(context);
+
         // Restore context to default translation and rotation.
         context.restore();
+    };
+
+    Straight.prototype.renderWaterLevel = function renderWaterLevel(context) {
+        if (this.water > 0) {
+            context.fillStyle = 'rgb(51, 204, 255)';
+            context.fillRect(6, 16, 38 * this.water / 100, 18);
+        }
     };
 
     return Straight;
