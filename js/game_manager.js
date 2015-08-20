@@ -1,80 +1,69 @@
-let config = require('./config');
-let Grid = require('./grid');
-let Pipes = require('./pipes');
-let RenderManager = require('./render_manager');
-let ClickController = require('./click_controller');
+const config = require('./config');
+const Grid = require('./grid');
+const Pipes = require('./pipes');
+const RenderManager = require('./render_manager');
+const ClickController = require('./click_controller');
 
 class GameManager {
     constructor() {
+        this.canvas = document.getElementById('game-canvas');
         this.grid = new Grid();
         this.pipes = new Pipes();
 
-        this.renderManager = new RenderManager(this.grid, this.pipes);
-        this.clickManager = new ClickController(this.pipes);
+        this.renderManager = new RenderManager(this.canvas, this.grid, this.pipes);
+        this.clickManager = new ClickController(this.canvas, this.pipes);
 
         this.startWaterFlow();
     }
 
     startWaterFlow() {
-        let startCol = this.colIndex = config.START_COL;
-        let startRow = this.rowIndex = config.START_ROW;
-
-        let firstPipe = this.pipes.cells[startCol][startRow];
+        const { col, row } = this.coords =  config.START_PIPE;
+        const startPipe = this.pipes.at(col, row);
 
         // Set the rotation of the first pipe,
         // to take water from the top right corner.
-        firstPipe.rotation = 0;
+        startPipe.rotation = 0;
 
         // Start to fill pipe from the top.
-        this.fillPipe('top', firstPipe);
+        this.fillPipe('top', startPipe);
     }
 
     fillPipe(entry, pipe) {
         pipe.fill(entry, nextEntry => {
-            this.setNextPipeCoords(nextEntry);
+            const nextPipe = this.getNextPipe(nextEntry);
 
-            let nextPipe = this.getNextPipe();
-
-            if (!nextPipe || !nextPipe.hasEntry(nextEntry)) {
-                console.log('Game Over');
-                return;
+            if (nextPipe && nextPipe.hasEntry(nextEntry)) {
+                return this.fillPipe(nextEntry, nextPipe);
             }
 
-            this.fillPipe(nextEntry, this.getNextPipe());
+            console.log('Game Over');
         });
     }
 
-    setNextPipeCoords(nextEntry) {
-        if (nextEntry === 'left') {
-            ++this.colIndex;
-        }
+    getNextPipe(nextEntry) {
+        const { col, row } = this.coords = this.getNextCoords(nextEntry);
 
-        else if (nextEntry === 'right') {
-            --this.colIndex;
-        }
-
-        if (nextEntry === 'top') {
-            ++this.rowIndex;
-        }
-
-        else if (nextEntry === 'bottom') {
-            --this.rowIndex;
-        }
+        return this.pipes.at(col, row);
     }
 
-    getNextPipe() {
-        let nextCol = this.colIndex;
-        let nextRow = this.rowIndex;
+    getNextCoords(nextEntry) {
+        let { col, row } = this.coords;
 
-        if (this.pipes.cells[nextCol] === undefined) {
-            return undefined;
+        switch(nextEntry) {
+            case 'left':
+                ++col;
+                break;
+            case 'right':
+                --col;
+                break;
+            case 'top':
+                ++row;
+                break;
+            case 'bottom':
+                --row;
         }
 
-        if (this.pipes.cells[nextCol][nextRow] === undefined) {
-            return undefined;
-        }
-
-        return this.pipes.cells[nextCol][nextRow];
+        return { col: col, row: row };
     }
 }
 

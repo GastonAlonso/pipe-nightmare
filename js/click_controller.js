@@ -1,7 +1,6 @@
 class ClickController {
-    constructor(pipes) {
+    constructor(canvas, pipes) {
         this.canvas = document.getElementById('game-canvas');
-
         this.pipes = pipes;
 
         this.canvas.addEventListener('click', this.getClickHandler(), false);
@@ -9,10 +8,10 @@ class ClickController {
 
     getClickHandler() {
         return e => {
-            let col = Math.floor((e.pageX - this.canvas.offsetLeft) / 50);
-            let row = Math.floor((e.pageY - this.canvas.offsetTop) / 50);
+            const col = Math.floor((e.pageX - this.canvas.offsetLeft) / 50);
+            const row = Math.floor((e.pageY - this.canvas.offsetTop) / 50);
 
-            this.pipes.cells[col][row].rotate();
+            this.pipes.at(col, row).rotate();
         };
     }
 }

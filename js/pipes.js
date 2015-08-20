@@ -1,6 +1,6 @@
-let config = require('./config');
-let Straight = require('./straight');
-let Elbow = require('./elbow');
+const config = require('./config');
+const Straight = require('./straight');
+const Elbow = require('./elbow');
 
 class Pipes {
     constructor() {
@@ -8,8 +8,8 @@ class Pipes {
     }
 
     populateCells() {
-        let numRows = config.GRID_HEIGHT / config.CELL_SIZE;
-        let numCols = config.GRID_WIDTH / config.CELL_SIZE;
+        const numRows = config.GRID_HEIGHT / config.CELL_SIZE;
+        const numCols = config.GRID_WIDTH / config.CELL_SIZE;
 
         this.cells = [];
 
@@ -23,13 +23,20 @@ class Pipes {
     }
 
     getRandomPipe(col, row) {
-        let random = Math.random();
-
-        if (random <= 0.5) {
+        if (Math.random() <= 0.5) {
             return new Elbow(col, row);
         }
 
         return new Straight(col, row);
+    }
+
+    at(col, row) {
+        if (this.cells[col] !== undefined &&
+            this.cells[col][row] !== undefined) {
+            return this.cells[col][row];
+        }
+
+        return undefined;
     }
 
     render(context) {

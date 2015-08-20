@@ -13,11 +13,10 @@ window.onload = function () {
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var ClickController = (function () {
-    function ClickController(pipes) {
+    function ClickController(canvas, pipes) {
         _classCallCheck(this, ClickController);
 
         this.canvas = document.getElementById('game-canvas');
-
         this.pipes = pipes;
 
         this.canvas.addEventListener('click', this.getClickHandler(), false);
@@ -30,7 +29,7 @@ var ClickController = (function () {
             var col = Math.floor((e.pageX - _this.canvas.offsetLeft) / 50);
             var row = Math.floor((e.pageY - _this.canvas.offsetTop) / 50);
 
-            _this.pipes.cells[col][row].rotate();
+            _this.pipes.at(col, row).rotate();
         };
     };
 
@@ -46,10 +45,12 @@ module.exports = {
     GRID_WIDTH: 1000,
     GRID_HEIGHT: 600,
     CELL_SIZE: 50,
-    START_COL: 19,
-    START_ROW: 0,
     FILL_SPEED: 200,
-    FPS: 5
+    FPS: 5,
+    START_PIPE: {
+        col: 19,
+        row: 0
+    }
 };
 
 },{}],4:[function(require,module,exports){
@@ -216,73 +217,75 @@ var GameManager = (function () {
     function GameManager() {
         _classCallCheck(this, GameManager);
 
+        this.canvas = document.getElementById('game-canvas');
         this.grid = new Grid();
         this.pipes = new Pipes();
 
-        this.renderManager = new RenderManager(this.grid, this.pipes);
-        this.clickManager = new ClickController(this.pipes);
+        this.renderManager = new RenderManager(this.canvas, this.grid, this.pipes);
+        this.clickManager = new ClickController(this.canvas, this.pipes);
 
         this.startWaterFlow();
     }
 
     GameManager.prototype.startWaterFlow = function startWaterFlow() {
-        var startCol = this.colIndex = config.START_COL;
-        var startRow = this.rowIndex = config.START_ROW;
+        var _coords = this.coords = config.START_PIPE;
 
-        var firstPipe = this.pipes.cells[startCol][startRow];
+        var col = _coords.col;
+        var row = _coords.row;
+
+        var startPipe = this.pipes.at(col, row);
 
         // Set the rotation of the first pipe,
         // to take water from the top right corner.
-        firstPipe.rotation = 0;
+        startPipe.rotation = 0;
 
         // Start to fill pipe from the top.
-        this.fillPipe('top', firstPipe);
+        this.fillPipe('top', startPipe);
     };
 
     GameManager.prototype.fillPipe = function fillPipe(entry, pipe) {
         var _this = this;
 
         pipe.fill(entry, function (nextEntry) {
-            _this.setNextPipeCoords(nextEntry);
+            var nextPipe = _this.getNextPipe(nextEntry);
 
-            var nextPipe = _this.getNextPipe();
-
-            if (!nextPipe || !nextPipe.hasEntry(nextEntry)) {
-                console.log('Game Over');
-                return;
+            if (nextPipe && nextPipe.hasEntry(nextEntry)) {
+                return _this.fillPipe(nextEntry, nextPipe);
             }
 
-            _this.fillPipe(nextEntry, _this.getNextPipe());
+            console.log('Game Over');
         });
     };
 
-    GameManager.prototype.setNextPipeCoords = function setNextPipeCoords(nextEntry) {
-        if (nextEntry === 'left') {
-            ++this.colIndex;
-        } else if (nextEntry === 'right') {
-            --this.colIndex;
-        }
+    GameManager.prototype.getNextPipe = function getNextPipe(nextEntry) {
+        var _coords2 = this.coords = this.getNextCoords(nextEntry);
 
-        if (nextEntry === 'top') {
-            ++this.rowIndex;
-        } else if (nextEntry === 'bottom') {
-            --this.rowIndex;
-        }
+        var col = _coords2.col;
+        var row = _coords2.row;
+
+        return this.pipes.at(col, row);
     };
 
-    GameManager.prototype.getNextPipe = function getNextPipe() {
-        var nextCol = this.colIndex;
-        var nextRow = this.rowIndex;
+    GameManager.prototype.getNextCoords = function getNextCoords(nextEntry) {
+        var _coords3 = this.coords;
+        var col = _coords3.col;
+        var row = _coords3.row;
 
-        if (this.pipes.cells[nextCol] === undefined) {
-            return undefined;
+        switch (nextEntry) {
+            case 'left':
+                ++col;
+                break;
+            case 'right':
+                --col;
+                break;
+            case 'top':
+                ++row;
+                break;
+            case 'bottom':
+                --row;
         }
 
-        if (this.pipes.cells[nextCol][nextRow] === undefined) {
-            return undefined;
-        }
-
-        return this.pipes.cells[nextCol][nextRow];
+        return { col: col, row: row };
     };
 
     return GameManager;
@@ -440,13 +443,19 @@ var Pipes = (function () {
     };
 
     Pipes.prototype.getRandomPipe = function getRandomPipe(col, row) {
-        var random = Math.random();
-
-        if (random <= 0.5) {
+        if (Math.random() <= 0.5) {
             return new Elbow(col, row);
         }
 
         return new Straight(col, row);
+    };
+
+    Pipes.prototype.at = function at(col, row) {
+        if (this.cells[col] !== undefined && this.cells[col][row] !== undefined) {
+            return this.cells[col][row];
+        }
+
+        return undefined;
     };
 
     Pipes.prototype.render = function render(context) {
@@ -473,15 +482,16 @@ var FPS_INTERVAL = 1000 / config.FPS;
 var startTime = undefined;
 
 var RenderManager = (function () {
-    function RenderManager(grid, pipes) {
+    function RenderManager(canvas, grid, pipes) {
         _classCallCheck(this, RenderManager);
 
-        this.canvas = document.getElementById('game-canvas');
-
+        this.canvas = canvas;
         this.grid = grid;
         this.pipes = pipes;
 
         startTime = Date.now();
+        this.context = this.canvas.getContext('2d');
+
         this.render();
     }
 
@@ -494,14 +504,12 @@ var RenderManager = (function () {
         if (elapsed > FPS_INTERVAL) {
             startTime = now - elapsed % FPS_INTERVAL;
 
-            var context = this.canvas.getContext('2d');
-
             // Clear canvas.
-            context.clearRect(0, 0, config.GRID_WIDTH, config.GRID_HEIGHT);
+            this.context.clearRect(0, 0, config.GRID_WIDTH, config.GRID_HEIGHT);
 
             // Render all modules.
-            this.grid.render(context);
-            this.pipes.render(context);
+            this.grid.render(this.context);
+            this.pipes.render(this.context);
         }
     };
 
