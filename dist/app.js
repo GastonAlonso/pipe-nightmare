@@ -12,28 +12,32 @@ window.onload = function () {
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var ClickManager = (function () {
-    function ClickManager(pipes) {
-        _classCallCheck(this, ClickManager);
+var ClickController = (function () {
+    function ClickController(pipes) {
+        _classCallCheck(this, ClickController);
 
         this.canvas = document.getElementById('game-canvas');
 
         this.pipes = pipes;
 
-        this.canvas.addEventListener('click', this.handleClick.bind(this), false);
+        this.canvas.addEventListener('click', this.getClickHandler(), false);
     }
 
-    ClickManager.prototype.handleClick = function handleClick(e) {
-        var col = Math.floor((e.pageX - this.canvas.offsetLeft) / 50);
-        var row = Math.floor((e.pageY - this.canvas.offsetTop) / 50);
+    ClickController.prototype.getClickHandler = function getClickHandler() {
+        var _this = this;
 
-        this.pipes.cells[col][row].rotate();
+        return function (e) {
+            var col = Math.floor((e.pageX - _this.canvas.offsetLeft) / 50);
+            var row = Math.floor((e.pageY - _this.canvas.offsetTop) / 50);
+
+            _this.pipes.cells[col][row].rotate();
+        };
     };
 
-    return ClickManager;
+    return ClickController;
 })();
 
-module.exports = ClickManager;
+module.exports = ClickController;
 
 },{}],3:[function(require,module,exports){
 "use strict";
@@ -41,7 +45,11 @@ module.exports = ClickManager;
 module.exports = {
     GRID_WIDTH: 1000,
     GRID_HEIGHT: 600,
-    CELL_SIZE: 50
+    CELL_SIZE: 50,
+    START_COL: 19,
+    START_ROW: 0,
+    FILL_SPEED: 200,
+    FPS: 5
 };
 
 },{}],4:[function(require,module,exports){
@@ -62,6 +70,68 @@ var Elbow = (function (_Pipe) {
 
         _Pipe.call(this, col, row);
     }
+
+    Elbow.prototype.fill = function fill(entry, done) {
+        var _this = this;
+
+        this.entry = entry;
+
+        _Pipe.prototype.fill.call(this, function () {
+            var nextEntry = _this.getNextEntry(entry);
+
+            done(nextEntry);
+        });
+    };
+
+    Elbow.prototype.hasEntry = function hasEntry(entry) {
+        if (entry === 'top') {
+            return this.rotation === 0 || this.rotation === 1;
+        } else if (entry === 'bottom') {
+            return this.rotation === 2 || this.rotation === 3;
+        } else if (entry === 'left') {
+            return this.rotation === 0 || this.rotation === 3;
+        } else if (entry === 'right') {
+            return this.rotation === 1 || this.rotation === 2;
+        }
+
+        return false;
+    };
+
+    Elbow.prototype.getNextEntry = function getNextEntry(entry) {
+        var nextEntry = undefined;
+
+        switch (entry) {
+            case 'top':
+                if (this.rotation === 0) {
+                    nextEntry = 'right';
+                } else {
+                    nextEntry = 'left';
+                }
+                break;
+            case 'left':
+                if (this.rotation === 0) {
+                    nextEntry = 'bottom';
+                } else {
+                    nextEntry = 'top';
+                }
+                break;
+            case 'right':
+                if (this.rotation === 1) {
+                    nextEntry = 'bottom';
+                } else {
+                    nextEntry = 'top';
+                }
+                break;
+            case 'bottom':
+                if (this.rotation === 3) {
+                    nextEntry = 'right';
+                } else {
+                    nextEntry = 'left';
+                }
+        }
+
+        return nextEntry;
+    };
 
     Elbow.prototype.render = function render(context) {
         // Create an elbow pipe;
@@ -97,7 +167,6 @@ var Elbow = (function (_Pipe) {
                 context.rotate(Math.PI * 1.5);
         }
 
-        // Stroke the elbow.
         context.stroke(pipe);
 
         // Draw the pipe couplings.
@@ -113,10 +182,16 @@ var Elbow = (function (_Pipe) {
     Elbow.prototype.renderWaterLevel = function renderWaterLevel(context) {
         if (this.water > 0) {
             context.fillStyle = 'rgb(51, 204, 255)';
-
             context.beginPath();
-            context.arc(6, 6, 7, 0, Math.PI / 2 * this.water / 100, false);
-            context.arc(6, 6, 28, Math.PI / 2 * this.water / 100, 0, true);
+
+            if (this.rotation === 0 && this.entry === 'top' || this.rotation === 1 && this.entry === 'right' || this.rotation === 2 && this.entry === 'bottom' || this.rotation === 3 && this.entry === 'left') {
+                context.arc(6, 6, 7, 0, Math.PI / 2 * this.water / 100, false);
+                context.arc(6, 6, 28, Math.PI / 2 * this.water / 100, 0, true);
+            } else {
+                context.arc(6, 6, 7, Math.PI / 2, Math.PI / 2 - Math.PI / 2 * this.water / 100, true);
+                context.arc(6, 6, 28, Math.PI / 2 - Math.PI / 2 * this.water / 100, Math.PI / 2, false);
+            }
+
             context.fill();
         }
     };
@@ -131,24 +206,91 @@ module.exports = Elbow;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
+var config = require('./config');
 var Grid = require('./grid');
 var Pipes = require('./pipes');
 var RenderManager = require('./render_manager');
-var ClickManager = require('./click_manager');
+var ClickController = require('./click_controller');
 
-var GameManager = function GameManager() {
-    _classCallCheck(this, GameManager);
+var GameManager = (function () {
+    function GameManager() {
+        _classCallCheck(this, GameManager);
 
-    this.grid = new Grid();
-    this.pipes = new Pipes();
+        this.grid = new Grid();
+        this.pipes = new Pipes();
 
-    this.renderManager = new RenderManager(this.grid, this.pipes);
-    this.clickManager = new ClickManager(this.pipes);
-};
+        this.renderManager = new RenderManager(this.grid, this.pipes);
+        this.clickManager = new ClickController(this.pipes);
+
+        this.startWaterFlow();
+    }
+
+    GameManager.prototype.startWaterFlow = function startWaterFlow() {
+        var startCol = this.colIndex = config.START_COL;
+        var startRow = this.rowIndex = config.START_ROW;
+
+        var firstPipe = this.pipes.cells[startCol][startRow];
+
+        // Set the rotation of the first pipe,
+        // to take water from the top right corner.
+        firstPipe.rotation = 0;
+
+        // Start to fill pipe from the top.
+        this.fillPipe('top', firstPipe);
+    };
+
+    GameManager.prototype.fillPipe = function fillPipe(entry, pipe) {
+        var _this = this;
+
+        pipe.fill(entry, function (nextEntry) {
+            _this.setNextPipeCoords(nextEntry);
+
+            var nextPipe = _this.getNextPipe();
+
+            if (!nextPipe || !nextPipe.hasEntry(nextEntry)) {
+                console.log('Game Over');
+                return;
+            }
+
+            _this.fillPipe(nextEntry, _this.getNextPipe());
+        });
+    };
+
+    GameManager.prototype.setNextPipeCoords = function setNextPipeCoords(nextEntry) {
+        if (nextEntry === 'left') {
+            ++this.colIndex;
+        } else if (nextEntry === 'right') {
+            --this.colIndex;
+        }
+
+        if (nextEntry === 'top') {
+            ++this.rowIndex;
+        } else if (nextEntry === 'bottom') {
+            --this.rowIndex;
+        }
+    };
+
+    GameManager.prototype.getNextPipe = function getNextPipe() {
+        var nextCol = this.colIndex;
+        var nextRow = this.rowIndex;
+
+        if (this.pipes.cells[nextCol] === undefined) {
+            return undefined;
+        }
+
+        if (this.pipes.cells[nextCol][nextRow] === undefined) {
+            return undefined;
+        }
+
+        return this.pipes.cells[nextCol][nextRow];
+    };
+
+    return GameManager;
+})();
 
 module.exports = GameManager;
 
-},{"./click_manager":2,"./grid":6,"./pipes":8,"./render_manager":9}],6:[function(require,module,exports){
+},{"./click_controller":2,"./config":3,"./grid":6,"./pipes":8,"./render_manager":9}],6:[function(require,module,exports){
 'use strict';
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -230,7 +372,6 @@ var Pipe = (function () {
 
         this.calculateOffsets();
         this.setInitialRotation();
-        this.fillWithWater();
     }
 
     Pipe.prototype.calculateOffsets = function calculateOffsets() {
@@ -242,16 +383,18 @@ var Pipe = (function () {
         this.rotation = Math.floor(Math.random() * 4);
     };
 
-    Pipe.prototype.fillWithWater = function fillWithWater() {
+    Pipe.prototype.fill = function fill(done) {
         var _this = this;
 
         var waterFill = setInterval(function () {
-            _this.water += 10;
-
-            if (_this.water === 100) {
+            if (_this.water >= 100) {
                 clearInterval(waterFill);
+
+                return done();
             }
-        }, 1000);
+
+            _this.water += 10;
+        }, config.FILL_SPEED);
     };
 
     Pipe.prototype.rotate = function rotate() {
@@ -326,9 +469,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var config = require('./config');
 
-var FPS = 5;
-var FPS_INTERVAL = 1000 / FPS;
-var startTime;
+var FPS_INTERVAL = 1000 / config.FPS;
+var startTime = undefined;
 
 var RenderManager = (function () {
     function RenderManager(grid, pipes) {
@@ -387,6 +529,22 @@ var Straight = (function (_Pipe) {
         _Pipe.call(this, col, row);
     }
 
+    Straight.prototype.fill = function fill(entry, done) {
+        this.entry = entry;
+
+        _Pipe.prototype.fill.call(this, function () {
+            return done(entry);
+        });
+    };
+
+    Straight.prototype.hasEntry = function hasEntry(entry) {
+        if (entry === 'top' || entry === 'bottom') {
+            return this.rotation === 0 || this.rotation === 2;
+        } else {
+            return this.rotation === 1 || this.rotation === 3;
+        }
+    };
+
     Straight.prototype.render = function render(context) {
         // Create a straight pipe;
         var pipe = new Path2D();
@@ -403,22 +561,21 @@ var Straight = (function (_Pipe) {
         // Set the rotation and offset.
         switch (this.rotation) {
             // Horizontal straight.
-            case 0:
-            case 2:
+            case 1:
+            case 3:
                 context.translate(this.xOffset, this.yOffset);
                 break;
 
             // Vertical straight.
-            case 1:
-            case 3:
+            case 0:
+            case 2:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
         }
 
-        // Stroke the straight.
         context.stroke(pipe);
 
-        // Stroke the pipe couplings.
+        // Draw the pipe couplings.
         context.strokeRect(0, 10, 5, 30);
         context.strokeRect(45, 10, 5, 30);
 
@@ -431,7 +588,12 @@ var Straight = (function (_Pipe) {
     Straight.prototype.renderWaterLevel = function renderWaterLevel(context) {
         if (this.water > 0) {
             context.fillStyle = 'rgb(51, 204, 255)';
-            context.fillRect(6, 16, 38 * this.water / 100, 18);
+
+            if ((this.rotation === 1 || this.rotation === 3) && this.entry === 'left' || (this.rotation === 0 || this.rotation === 2) && this.entry === 'top') {
+                context.fillRect(6, 16, 38 * this.water / 100, 18);
+            } else {
+                context.fillRect(44 - 38 * this.water / 100, 16, 38 * this.water / 100, 18);
+            }
         }
     };
 

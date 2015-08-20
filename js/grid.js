@@ -1,4 +1,4 @@
-var config = require('./config');
+let config = require('./config');
 
 const GRID_LINE_WIDTH = 0.7;
 const DEFAULT_LINE_WIDTH = 1.0;

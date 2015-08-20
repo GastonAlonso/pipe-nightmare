@@ -1,8 +1,7 @@
-var config = require('./config');
+let config = require('./config');
 
-const FPS = 5;
-const FPS_INTERVAL = 1000 / FPS;
-var startTime;
+const FPS_INTERVAL = 1000 / config.FPS;
+let startTime;
 
 class RenderManager {
     constructor(grid, pipes) {

@@ -1,4 +1,4 @@
-var GameManager = require('./game_manager');
+let GameManager = require('./game_manager');
 
 window.onload = function() {
     new GameManager();

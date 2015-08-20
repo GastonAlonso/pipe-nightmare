@@ -1,14 +1,82 @@
-var Pipe = require('./pipe');
-var config = require('./config');
+let Pipe = require('./pipe');
+let config = require('./config');
 
 class Elbow extends Pipe {
     constructor(col, row) {
         super(col, row);
     }
 
+    fill(entry, done) {
+        this.entry = entry;
+
+        super(() => {
+            let nextEntry = this.getNextEntry(entry);
+
+            done(nextEntry);
+        });
+    }
+
+    hasEntry(entry) {
+        if (entry === 'top') {
+            return (this.rotation === 0 || this.rotation === 1);
+        } else if (entry === 'bottom') {
+            return (this.rotation === 2 || this.rotation === 3);
+        } else if (entry === 'left') {
+            return (this.rotation === 0 || this.rotation === 3);
+        } else if (entry === 'right') {
+            return (this.rotation === 1 || this.rotation === 2);
+        }
+
+        return false;
+    }
+
+    getNextEntry(entry) {
+        let nextEntry;
+
+        switch(entry) {
+            case 'top':
+                if (this.rotation === 0) {
+                    nextEntry = 'right';
+                }
+
+                else {
+                    nextEntry = 'left';
+                }
+                break;
+            case 'left':
+                if (this.rotation === 0) {
+                    nextEntry = 'bottom';
+                }
+
+                else {
+                    nextEntry = 'top';
+                }
+                break;
+            case 'right':
+                if (this.rotation === 1) {
+                    nextEntry = 'bottom';
+                }
+
+                else {
+                    nextEntry = 'top';
+                }
+                break;
+            case 'bottom':
+                if (this.rotation === 3) {
+                    nextEntry = 'right';
+                }
+
+                else {
+                    nextEntry = 'left';
+                }
+        }
+
+        return nextEntry;
+    }
+
     render(context) {
         // Create an elbow pipe;
-        var pipe = new Path2D();
+        let pipe = new Path2D();
 
         // Draw the elbow.
         pipe.arc(5, 5, 8, 0, Math.PI / 2, false);
@@ -40,7 +108,6 @@ class Elbow extends Pipe {
                 context.rotate(Math.PI * 1.5);
         }
 
-        // Stroke the elbow.
         context.stroke(pipe);
 
         // Draw the pipe couplings.
@@ -56,10 +123,19 @@ class Elbow extends Pipe {
     renderWaterLevel(context) {
         if (this.water > 0) {
             context.fillStyle = 'rgb(51, 204, 255)';
-
             context.beginPath();
-            context.arc(6, 6, 7, 0, (Math.PI / 2 * this.water) / 100, false);
-            context.arc(6, 6, 28, (Math.PI / 2 * this.water) / 100, 0, true);
+
+            if ((this.rotation === 0 && this.entry === 'top') ||
+                (this.rotation === 1 && this.entry === 'right') ||
+                (this.rotation === 2 && this.entry === 'bottom') ||
+                (this.rotation === 3 && this.entry === 'left')) {
+                context.arc(6, 6, 7, 0, (Math.PI / 2 * this.water) / 100, false);
+                context.arc(6, 6, 28, (Math.PI / 2 * this.water) / 100, 0, true);
+            } else {
+                context.arc(6, 6, 7, (Math.PI / 2), (Math.PI / 2) - ((Math.PI / 2 * this.water) / 100), true);
+                context.arc(6, 6, 28, (Math.PI / 2) - ((Math.PI / 2 * this.water) / 100), (Math.PI / 2), false);
+            }
+
             context.fill();
         }
     }

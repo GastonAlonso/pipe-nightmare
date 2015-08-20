@@ -1,14 +1,28 @@
-var Pipe = require('./pipe');
-var config = require('./config');
+let Pipe = require('./pipe');
+let config = require('./config');
 
 class Straight extends Pipe {
     constructor(col, row) {
         super(col, row);
     }
 
+    fill(entry, done) {
+        this.entry = entry;
+
+        super(() => done(entry));
+    }
+
+    hasEntry(entry) {
+        if (entry === 'top' || entry === 'bottom') {
+            return (this.rotation === 0 || this.rotation === 2);
+        } else {
+            return (this.rotation === 1 || this.rotation === 3);
+        }
+    }
+
     render(context) {
         // Create a straight pipe;
-        var pipe = new Path2D();
+        let pipe = new Path2D();
 
         // Draw the straight.
         pipe.moveTo(5, 15);
@@ -22,22 +36,21 @@ class Straight extends Pipe {
         // Set the rotation and offset.
         switch(this.rotation) {
             // Horizontal straight.
-            case 0:
-            case 2:
+            case 1:
+            case 3:
                 context.translate(this.xOffset, this.yOffset);
                 break;
 
             // Vertical straight.
-            case 1:
-            case 3:
+            case 0:
+            case 2:
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
         }
 
-        // Stroke the straight.
         context.stroke(pipe);
 
-        // Stroke the pipe couplings.
+        // Draw the pipe couplings.
         context.strokeRect(0, 10, 5, 30);
         context.strokeRect(45, 10, 5, 30);
 
@@ -50,7 +63,13 @@ class Straight extends Pipe {
     renderWaterLevel(context) {
         if (this.water > 0) {
             context.fillStyle = 'rgb(51, 204, 255)';
-            context.fillRect(6, 16, (38 * this.water) / 100, 18);
+
+            if (((this.rotation === 1 || this.rotation === 3) && this.entry === 'left') ||
+                ((this.rotation === 0 || this.rotation === 2) && this.entry === 'top')) {
+                context.fillRect(6, 16, (38 * this.water) / 100, 18);
+            } else {
+                context.fillRect(44 - ((38 * this.water) / 100), 16, (38 * this.water) / 100, 18);
+            }
         }
     }
 }

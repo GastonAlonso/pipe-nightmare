@@ -1,4 +1,4 @@
-var config = require('./config');
+let config = require('./config');
 
 class Pipe {
     constructor(col, row) {
@@ -9,7 +9,6 @@ class Pipe {
 
         this.calculateOffsets();
         this.setInitialRotation();
-        this.fillWithWater();
     }
 
     calculateOffsets() {
@@ -21,14 +20,16 @@ class Pipe {
         this.rotation = Math.floor(Math.random() * 4);
     }
 
-    fillWithWater() {
+    fill(done) {
         let waterFill = setInterval(() => {
-            this.water += 10;
-
-            if (this.water === 100) {
+            if (this.water >= 100) {
                 clearInterval(waterFill);
+
+                return done();
             }
-        }, 1000);
+
+            this.water += 10;
+        }, config.FILL_SPEED);
     }
 
     rotate() {
