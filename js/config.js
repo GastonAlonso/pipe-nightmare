@@ -4,6 +4,7 @@ module.exports = {
     CELL_SIZE: 50,
     FILL_SPEED: 200,
     FPS: 5,
+    WATER_COLOR: 'rgb(51, 204, 255)',
     START_PIPE: {
         col: 19,
         row: 0

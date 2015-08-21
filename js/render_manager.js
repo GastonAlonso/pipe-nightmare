@@ -1,4 +1,4 @@
-const config = require('./config');
+let config = require('./config');
 
 const FPS_INTERVAL = 1000 / config.FPS;
 let startTime;
@@ -18,8 +18,8 @@ class RenderManager {
     render() {
         window.requestAnimationFrame(this.render.bind(this));
 
-        const now = Date.now();
-        const elapsed = now - startTime;
+        let now = Date.now();
+        let elapsed = now - startTime;
 
         if (elapsed > FPS_INTERVAL) {
             startTime = now - (elapsed % FPS_INTERVAL);

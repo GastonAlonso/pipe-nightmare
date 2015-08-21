@@ -1,6 +1,6 @@
-const config = require('./config');
-const Straight = require('./straight');
-const Elbow = require('./elbow');
+let config = require('./config');
+let Straight = require('./straight');
+let Elbow = require('./elbow');
 
 class Pipes {
     constructor() {
@@ -8,8 +8,8 @@ class Pipes {
     }
 
     populateCells() {
-        const numRows = config.GRID_HEIGHT / config.CELL_SIZE;
-        const numCols = config.GRID_WIDTH / config.CELL_SIZE;
+        let numRows = config.GRID_HEIGHT / config.CELL_SIZE;
+        let numCols = config.GRID_WIDTH / config.CELL_SIZE;
 
         this.cells = [];
 

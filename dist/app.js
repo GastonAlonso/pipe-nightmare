@@ -39,7 +39,7 @@ var ClickController = (function () {
 module.exports = ClickController;
 
 },{}],3:[function(require,module,exports){
-"use strict";
+'use strict';
 
 module.exports = {
     GRID_WIDTH: 1000,
@@ -47,6 +47,7 @@ module.exports = {
     CELL_SIZE: 50,
     FILL_SPEED: 200,
     FPS: 5,
+    WATER_COLOR: 'rgb(51, 204, 255)',
     START_PIPE: {
         col: 19,
         row: 0
@@ -63,6 +64,20 @@ function _inherits(subClass, superClass) { if (typeof superClass !== 'function' 
 var Pipe = require('./pipe');
 var config = require('./config');
 
+var positions = {
+    0: 'left-top',
+    1: 'right-top',
+    2: 'right-bottom',
+    3: 'left-bottom'
+};
+
+var openings = {
+    0: ['left', 'top'],
+    1: ['right', 'top'],
+    2: ['right', 'bottom'],
+    3: ['left', 'bottom']
+};
+
 var Elbow = (function (_Pipe) {
     _inherits(Elbow, _Pipe);
 
@@ -78,64 +93,29 @@ var Elbow = (function (_Pipe) {
         this.entry = entry;
 
         _Pipe.prototype.fill.call(this, function () {
-            var nextEntry = _this.getNextEntry(entry);
+            var exit = _this.getExit(entry);
 
-            done(nextEntry);
+            done(exit);
         });
     };
 
     Elbow.prototype.hasEntry = function hasEntry(entry) {
-        if (entry === 'top') {
-            return this.rotation === 0 || this.rotation === 1;
-        } else if (entry === 'bottom') {
-            return this.rotation === 2 || this.rotation === 3;
-        } else if (entry === 'left') {
-            return this.rotation === 0 || this.rotation === 3;
-        } else if (entry === 'right') {
-            return this.rotation === 1 || this.rotation === 2;
-        }
-
-        return false;
+        return openings[this.rotation].indexOf(entry) > -1;
     };
 
-    Elbow.prototype.getNextEntry = function getNextEntry(entry) {
-        var nextEntry = undefined;
+    Elbow.prototype.getExit = function getExit(entry) {
+        var exit = undefined;
 
-        switch (entry) {
-            case 'top':
-                if (this.rotation === 0) {
-                    nextEntry = 'right';
-                } else {
-                    nextEntry = 'left';
-                }
-                break;
-            case 'left':
-                if (this.rotation === 0) {
-                    nextEntry = 'bottom';
-                } else {
-                    nextEntry = 'top';
-                }
-                break;
-            case 'right':
-                if (this.rotation === 1) {
-                    nextEntry = 'bottom';
-                } else {
-                    nextEntry = 'top';
-                }
-                break;
-            case 'bottom':
-                if (this.rotation === 3) {
-                    nextEntry = 'right';
-                } else {
-                    nextEntry = 'left';
-                }
-        }
+        openings[this.rotation].forEach(function (opening) {
+            if (opening !== entry) {
+                exit = opening;
+            }
+        });
 
-        return nextEntry;
+        return exit;
     };
 
     Elbow.prototype.render = function render(context) {
-        // Create an elbow pipe;
         var pipe = new Path2D();
 
         // Draw the elbow.
@@ -143,27 +123,22 @@ var Elbow = (function (_Pipe) {
         pipe.moveTo(35, 5);
         pipe.arc(5, 5, 30, 0, Math.PI / 2, false);
 
-        // Save the context before setting translation and rotation.
         context.save();
 
         // Set the rotation and offset.
-        switch (this.rotation) {
-            // Left-Top.
-            case 0:
+        switch (positions[this.rotation]) {
+            case 'left-top':
                 context.translate(this.xOffset, this.yOffset);
                 break;
-            // Right-Top.
-            case 1:
+            case 'right-top':
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
                 break;
-            // Right-Bottom.
-            case 2:
+            case 'right-bottom':
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset + config.CELL_SIZE);
                 context.rotate(Math.PI);
                 break;
-            // Left-Bottom.
-            case 3:
+            case 'left-bottom':
                 context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
                 context.rotate(Math.PI * 1.5);
         }
@@ -176,21 +151,21 @@ var Elbow = (function (_Pipe) {
 
         this.renderWaterLevel(context);
 
-        // Restore context to default translation and rotation.
         context.restore();
     };
 
     Elbow.prototype.renderWaterLevel = function renderWaterLevel(context) {
-        if (this.water > 0) {
-            context.fillStyle = 'rgb(51, 204, 255)';
+        if (this.waterLevel > 0) {
+            context.fillStyle = config.WATER_COLOR;
             context.beginPath();
 
-            if (this.rotation === 0 && this.entry === 'top' || this.rotation === 1 && this.entry === 'right' || this.rotation === 2 && this.entry === 'bottom' || this.rotation === 3 && this.entry === 'left') {
-                context.arc(6, 6, 7, 0, Math.PI / 2 * this.water / 100, false);
-                context.arc(6, 6, 28, Math.PI / 2 * this.water / 100, 0, true);
+            // Fill water one way or the other depending on position and entry.
+            if (positions[this.rotation] === 'left-top' && this.entry === 'top' || positions[this.rotation] === 'right-top' && this.entry === 'right' || positions[this.rotation] === 'right-bottom' && this.entry === 'bottom' || positions[this.rotation] === 'left-bottom' && this.entry === 'left') {
+                context.arc(6, 6, 7, 0, Math.PI / 2 * this.waterLevel / 100, false);
+                context.arc(6, 6, 28, Math.PI / 2 * this.waterLevel / 100, 0, true);
             } else {
-                context.arc(6, 6, 7, Math.PI / 2, Math.PI / 2 - Math.PI / 2 * this.water / 100, true);
-                context.arc(6, 6, 28, Math.PI / 2 - Math.PI / 2 * this.water / 100, Math.PI / 2, false);
+                context.arc(6, 6, 7, Math.PI / 2, Math.PI / 2 - Math.PI / 2 * this.waterLevel / 100, true);
+                context.arc(6, 6, 28, Math.PI / 2 - Math.PI / 2 * this.waterLevel / 100, Math.PI / 2, false);
             }
 
             context.fill();
@@ -212,6 +187,13 @@ var Grid = require('./grid');
 var Pipes = require('./pipes');
 var RenderManager = require('./render_manager');
 var ClickController = require('./click_controller');
+
+var exitToEntry = {
+    'top': 'bottom',
+    'bottom': 'top',
+    'left': 'right',
+    'right': 'left'
+};
 
 var GameManager = (function () {
     function GameManager() {
@@ -246,8 +228,9 @@ var GameManager = (function () {
     GameManager.prototype.fillPipe = function fillPipe(entry, pipe) {
         var _this = this;
 
-        pipe.fill(entry, function (nextEntry) {
-            var nextPipe = _this.getNextPipe(nextEntry);
+        pipe.fill(entry, function (exit) {
+            var nextPipe = _this.getNextPipe(exit);
+            var nextEntry = exitToEntry[exit];
 
             if (nextPipe && nextPipe.hasEntry(nextEntry)) {
                 return _this.fillPipe(nextEntry, nextPipe);
@@ -257,8 +240,8 @@ var GameManager = (function () {
         });
     };
 
-    GameManager.prototype.getNextPipe = function getNextPipe(nextEntry) {
-        var _coords2 = this.coords = this.getNextCoords(nextEntry);
+    GameManager.prototype.getNextPipe = function getNextPipe(exit) {
+        var _coords2 = this.coords = this.getNextCoords(exit);
 
         var col = _coords2.col;
         var row = _coords2.row;
@@ -266,23 +249,23 @@ var GameManager = (function () {
         return this.pipes.at(col, row);
     };
 
-    GameManager.prototype.getNextCoords = function getNextCoords(nextEntry) {
+    GameManager.prototype.getNextCoords = function getNextCoords(exit) {
         var _coords3 = this.coords;
         var col = _coords3.col;
         var row = _coords3.row;
 
-        switch (nextEntry) {
+        switch (exit) {
             case 'left':
-                ++col;
-                break;
-            case 'right':
                 --col;
                 break;
+            case 'right':
+                ++col;
+                break;
             case 'top':
-                ++row;
+                --row;
                 break;
             case 'bottom':
-                --row;
+                ++row;
         }
 
         return { col: col, row: row };
@@ -371,7 +354,7 @@ var Pipe = (function () {
         this.col = col;
         this.row = row;
 
-        this.water = 0;
+        this.waterLevel = 0;
 
         this.calculateOffsets();
         this.setInitialRotation();
@@ -390,18 +373,18 @@ var Pipe = (function () {
         var _this = this;
 
         var waterFill = setInterval(function () {
-            if (_this.water >= 100) {
+            if (_this.waterLevel >= 100) {
                 clearInterval(waterFill);
 
                 return done();
             }
 
-            _this.water += 10;
+            _this.waterLevel += 10;
         }, config.FILL_SPEED);
     };
 
     Pipe.prototype.rotate = function rotate() {
-        if (this.water === 0) {
+        if (this.waterLevel === 0) {
             this.rotation = ++this.rotation % 4;
         }
     };
@@ -528,6 +511,20 @@ function _inherits(subClass, superClass) { if (typeof superClass !== 'function' 
 var Pipe = require('./pipe');
 var config = require('./config');
 
+var positions = {
+    0: 'vertical',
+    1: 'horizontal',
+    2: 'vertical',
+    3: 'horizontal'
+};
+
+var openings = {
+    0: ['top', 'bottom'],
+    1: ['left', 'right'],
+    2: ['top', 'bottom'],
+    3: ['left', 'right']
+};
+
 var Straight = (function (_Pipe) {
     _inherits(Straight, _Pipe);
 
@@ -538,23 +535,34 @@ var Straight = (function (_Pipe) {
     }
 
     Straight.prototype.fill = function fill(entry, done) {
+        var _this = this;
+
         this.entry = entry;
 
         _Pipe.prototype.fill.call(this, function () {
-            return done(entry);
+            var exit = _this.getExit(entry);
+
+            done(exit);
         });
     };
 
     Straight.prototype.hasEntry = function hasEntry(entry) {
-        if (entry === 'top' || entry === 'bottom') {
-            return this.rotation === 0 || this.rotation === 2;
-        } else {
-            return this.rotation === 1 || this.rotation === 3;
-        }
+        return openings[this.rotation].indexOf(entry) > -1;
+    };
+
+    Straight.prototype.getExit = function getExit(entry) {
+        var exit = undefined;
+
+        openings[this.rotation].forEach(function (opening) {
+            if (opening !== entry) {
+                exit = opening;
+            }
+        });
+
+        return exit;
     };
 
     Straight.prototype.render = function render(context) {
-        // Create a straight pipe;
         var pipe = new Path2D();
 
         // Draw the straight.
@@ -563,20 +571,14 @@ var Straight = (function (_Pipe) {
         pipe.moveTo(5, 35);
         pipe.lineTo(45, 35);
 
-        // Save the context before setting translation and rotation.
         context.save();
 
         // Set the rotation and offset.
-        switch (this.rotation) {
-            // Horizontal straight.
-            case 1:
-            case 3:
+        switch (positions[this.rotation]) {
+            case 'horizontal':
                 context.translate(this.xOffset, this.yOffset);
                 break;
-
-            // Vertical straight.
-            case 0:
-            case 2:
+            case 'vertical':
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
         }
@@ -589,18 +591,18 @@ var Straight = (function (_Pipe) {
 
         this.renderWaterLevel(context);
 
-        // Restore context to default translation and rotation.
         context.restore();
     };
 
     Straight.prototype.renderWaterLevel = function renderWaterLevel(context) {
-        if (this.water > 0) {
-            context.fillStyle = 'rgb(51, 204, 255)';
+        if (this.waterLevel > 0) {
+            context.fillStyle = config.WATER_COLOR;
 
-            if ((this.rotation === 1 || this.rotation === 3) && this.entry === 'left' || (this.rotation === 0 || this.rotation === 2) && this.entry === 'top') {
-                context.fillRect(6, 16, 38 * this.water / 100, 18);
+            // Fill water one way or the other depending on position and entry.
+            if (positions[this.rotation] === 'horizontal' && this.entry === 'left' || positions[this.rotation] === 'vertical' && this.entry === 'top') {
+                context.fillRect(6, 16, 38 * this.waterLevel / 100, 18);
             } else {
-                context.fillRect(44 - 38 * this.water / 100, 16, 38 * this.water / 100, 18);
+                context.fillRect(44 - 38 * this.waterLevel / 100, 16, 38 * this.waterLevel / 100, 18);
             }
         }
     };

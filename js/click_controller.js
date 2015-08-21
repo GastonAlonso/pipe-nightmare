@@ -8,8 +8,8 @@ class ClickController {
 
     getClickHandler() {
         return e => {
-            const col = Math.floor((e.pageX - this.canvas.offsetLeft) / 50);
-            const row = Math.floor((e.pageY - this.canvas.offsetTop) / 50);
+            let col = Math.floor((e.pageX - this.canvas.offsetLeft) / 50);
+            let row = Math.floor((e.pageY - this.canvas.offsetTop) / 50);
 
             this.pipes.at(col, row).rotate();
         };

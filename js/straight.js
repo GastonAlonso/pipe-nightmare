@@ -1,6 +1,20 @@
 let Pipe = require('./pipe');
 let config = require('./config');
 
+let positions = {
+    0: 'vertical',
+    1: 'horizontal',
+    2: 'vertical',
+    3: 'horizontal'
+};
+
+let openings = {
+    0: ['top', 'bottom'],
+    1: ['left', 'right'],
+    2: ['top', 'bottom'],
+    3: ['left', 'right']
+};
+
 class Straight extends Pipe {
     constructor(col, row) {
         super(col, row);
@@ -9,19 +23,31 @@ class Straight extends Pipe {
     fill(entry, done) {
         this.entry = entry;
 
-        super(() => done(entry));
+        super(() => {
+            let exit = this.getExit(entry);
+
+            done(exit)
+        });
     }
 
     hasEntry(entry) {
-        if (entry === 'top' || entry === 'bottom') {
-            return (this.rotation === 0 || this.rotation === 2);
-        } else {
-            return (this.rotation === 1 || this.rotation === 3);
-        }
+        return openings[this.rotation].indexOf(entry) > -1;
     }
 
+    getExit(entry) {
+        let exit;
+
+        openings[this.rotation].forEach(opening =>  {
+            if (opening !== entry) {
+                exit = opening
+            }
+        });
+
+        return exit;
+    }
+
+
     render(context) {
-        // Create a straight pipe;
         let pipe = new Path2D();
 
         // Draw the straight.
@@ -30,20 +56,14 @@ class Straight extends Pipe {
         pipe.moveTo(5, 35);
         pipe.lineTo(45, 35);
 
-        // Save the context before setting translation and rotation.
         context.save();
 
         // Set the rotation and offset.
-        switch(this.rotation) {
-            // Horizontal straight.
-            case 1:
-            case 3:
+        switch(positions[this.rotation]) {
+            case 'horizontal':
                 context.translate(this.xOffset, this.yOffset);
                 break;
-
-            // Vertical straight.
-            case 0:
-            case 2:
+            case 'vertical':
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
         }
@@ -56,19 +76,19 @@ class Straight extends Pipe {
 
         this.renderWaterLevel(context);
 
-        // Restore context to default translation and rotation.
         context.restore();
     }
 
     renderWaterLevel(context) {
-        if (this.water > 0) {
-            context.fillStyle = 'rgb(51, 204, 255)';
+        if (this.waterLevel > 0) {
+            context.fillStyle = config.WATER_COLOR;
 
-            if (((this.rotation === 1 || this.rotation === 3) && this.entry === 'left') ||
-                ((this.rotation === 0 || this.rotation === 2) && this.entry === 'top')) {
-                context.fillRect(6, 16, (38 * this.water) / 100, 18);
+            // Fill water one way or the other depending on position and entry.
+            if (positions[this.rotation] === 'horizontal' && this.entry === 'left' ||
+                positions[this.rotation] === 'vertical' && this.entry === 'top') {
+                context.fillRect(6, 16, (38 * this.waterLevel) / 100, 18);
             } else {
-                context.fillRect(44 - ((38 * this.water) / 100), 16, (38 * this.water) / 100, 18);
+                context.fillRect(44 - ((38 * this.waterLevel) / 100), 16, (38 * this.waterLevel) / 100, 18);
             }
         }
     }

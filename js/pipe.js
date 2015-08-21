@@ -5,7 +5,7 @@ class Pipe {
         this.col = col;
         this.row = row;
 
-        this.water = 0;
+        this.waterLevel = 0;
 
         this.calculateOffsets();
         this.setInitialRotation();
@@ -22,18 +22,18 @@ class Pipe {
 
     fill(done) {
         let waterFill = setInterval(() => {
-            if (this.water >= 100) {
+            if (this.waterLevel >= 100) {
                 clearInterval(waterFill);
 
                 return done();
             }
 
-            this.water += 10;
+            this.waterLevel += 10;
         }, config.FILL_SPEED);
     }
 
     rotate() {
-        if (this.water === 0) {
+        if (this.waterLevel === 0) {
             this.rotation = ++this.rotation % 4;
         }
     }

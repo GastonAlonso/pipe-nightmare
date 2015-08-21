@@ -1,8 +1,15 @@
-const config = require('./config');
-const Grid = require('./grid');
-const Pipes = require('./pipes');
-const RenderManager = require('./render_manager');
-const ClickController = require('./click_controller');
+let config = require('./config');
+let Grid = require('./grid');
+let Pipes = require('./pipes');
+let RenderManager = require('./render_manager');
+let ClickController = require('./click_controller');
+
+let exitToEntry = {
+    'top': 'bottom',
+    'bottom': 'top',
+    'left': 'right',
+    'right': 'left'
+};
 
 class GameManager {
     constructor() {
@@ -17,8 +24,8 @@ class GameManager {
     }
 
     startWaterFlow() {
-        const { col, row } = this.coords =  config.START_PIPE;
-        const startPipe = this.pipes.at(col, row);
+        let { col, row } = this.coords =  config.START_PIPE;
+        let startPipe = this.pipes.at(col, row);
 
         // Set the rotation of the first pipe,
         // to take water from the top right corner.
@@ -29,8 +36,9 @@ class GameManager {
     }
 
     fillPipe(entry, pipe) {
-        pipe.fill(entry, nextEntry => {
-            const nextPipe = this.getNextPipe(nextEntry);
+        pipe.fill(entry, exit => {
+            let nextPipe = this.getNextPipe(exit);
+            let nextEntry = exitToEntry[exit];
 
             if (nextPipe && nextPipe.hasEntry(nextEntry)) {
                 return this.fillPipe(nextEntry, nextPipe);
@@ -40,27 +48,27 @@ class GameManager {
         });
     }
 
-    getNextPipe(nextEntry) {
-        const { col, row } = this.coords = this.getNextCoords(nextEntry);
+    getNextPipe(exit) {
+        let { col, row } = this.coords = this.getNextCoords(exit);
 
         return this.pipes.at(col, row);
     }
 
-    getNextCoords(nextEntry) {
+    getNextCoords(exit) {
         let { col, row } = this.coords;
 
-        switch(nextEntry) {
+        switch(exit) {
             case 'left':
-                ++col;
-                break;
-            case 'right':
                 --col;
                 break;
+            case 'right':
+                ++col;
+                break;
             case 'top':
-                ++row;
+                --row;
                 break;
             case 'bottom':
-                --row;
+                ++row;
         }
 
         return { col: col, row: row };

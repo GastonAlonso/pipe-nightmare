@@ -1,6 +1,20 @@
 let Pipe = require('./pipe');
 let config = require('./config');
 
+let positions = {
+    0: 'left-top',
+    1: 'right-top',
+    2: 'right-bottom',
+    3: 'left-bottom'
+};
+
+let openings = {
+    0: ['left', 'top'],
+    1: ['right', 'top'],
+    2: ['right', 'bottom'],
+    3: ['left', 'bottom']
+};
+
 class Elbow extends Pipe {
     constructor(col, row) {
         super(col, row);
@@ -10,72 +24,29 @@ class Elbow extends Pipe {
         this.entry = entry;
 
         super(() => {
-            let nextEntry = this.getNextEntry(entry);
+            let exit = this.getExit(entry);
 
-            done(nextEntry);
+            done(exit);
         });
     }
 
     hasEntry(entry) {
-        if (entry === 'top') {
-            return (this.rotation === 0 || this.rotation === 1);
-        } else if (entry === 'bottom') {
-            return (this.rotation === 2 || this.rotation === 3);
-        } else if (entry === 'left') {
-            return (this.rotation === 0 || this.rotation === 3);
-        } else if (entry === 'right') {
-            return (this.rotation === 1 || this.rotation === 2);
-        }
-
-        return false;
+        return openings[this.rotation].indexOf(entry) > -1;
     }
 
-    getNextEntry(entry) {
-        let nextEntry;
+    getExit(entry) {
+        let exit;
 
-        switch(entry) {
-            case 'top':
-                if (this.rotation === 0) {
-                    nextEntry = 'right';
-                }
+        openings[this.rotation].forEach(opening =>  {
+            if (opening !== entry) {
+                exit = opening
+            }
+        });
 
-                else {
-                    nextEntry = 'left';
-                }
-                break;
-            case 'left':
-                if (this.rotation === 0) {
-                    nextEntry = 'bottom';
-                }
-
-                else {
-                    nextEntry = 'top';
-                }
-                break;
-            case 'right':
-                if (this.rotation === 1) {
-                    nextEntry = 'bottom';
-                }
-
-                else {
-                    nextEntry = 'top';
-                }
-                break;
-            case 'bottom':
-                if (this.rotation === 3) {
-                    nextEntry = 'right';
-                }
-
-                else {
-                    nextEntry = 'left';
-                }
-        }
-
-        return nextEntry;
+        return exit;
     }
 
     render(context) {
-        // Create an elbow pipe;
         let pipe = new Path2D();
 
         // Draw the elbow.
@@ -83,27 +54,22 @@ class Elbow extends Pipe {
         pipe.moveTo(35, 5);
         pipe.arc(5, 5, 30, 0, Math.PI / 2, false);
 
-        // Save the context before setting translation and rotation.
         context.save();
 
         // Set the rotation and offset.
-        switch(this.rotation) {
-            // Left-Top.
-            case 0:
+        switch(positions[this.rotation]) {
+            case 'left-top':
                 context.translate(this.xOffset, this.yOffset);
                 break;
-            // Right-Top.
-            case 1:
+            case 'right-top':
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
                 break;
-            // Right-Bottom.
-            case 2:
+            case 'right-bottom':
                 context.translate(this.xOffset + config.CELL_SIZE, this.yOffset + config.CELL_SIZE);
                 context.rotate(Math.PI);
                 break;
-            // Left-Bottom.
-            case 3:
+            case 'left-bottom':
                 context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
                 context.rotate(Math.PI * 1.5);
         }
@@ -116,24 +82,24 @@ class Elbow extends Pipe {
 
         this.renderWaterLevel(context);
 
-        // Restore context to default translation and rotation.
         context.restore();
     }
 
     renderWaterLevel(context) {
-        if (this.water > 0) {
-            context.fillStyle = 'rgb(51, 204, 255)';
+        if (this.waterLevel > 0) {
+            context.fillStyle = config.WATER_COLOR;
             context.beginPath();
 
-            if ((this.rotation === 0 && this.entry === 'top') ||
-                (this.rotation === 1 && this.entry === 'right') ||
-                (this.rotation === 2 && this.entry === 'bottom') ||
-                (this.rotation === 3 && this.entry === 'left')) {
-                context.arc(6, 6, 7, 0, (Math.PI / 2 * this.water) / 100, false);
-                context.arc(6, 6, 28, (Math.PI / 2 * this.water) / 100, 0, true);
+            // Fill water one way or the other depending on position and entry.
+            if (positions[this.rotation] === 'left-top' && this.entry === 'top' ||
+                positions[this.rotation] === 'right-top' && this.entry === 'right' ||
+                positions[this.rotation] === 'right-bottom' && this.entry === 'bottom' ||
+                positions[this.rotation] === 'left-bottom' && this.entry === 'left') {
+                context.arc(6, 6, 7, 0, (Math.PI / 2 * this.waterLevel) / 100, false);
+                context.arc(6, 6, 28, (Math.PI / 2 * this.waterLevel) / 100, 0, true);
             } else {
-                context.arc(6, 6, 7, (Math.PI / 2), (Math.PI / 2) - ((Math.PI / 2 * this.water) / 100), true);
-                context.arc(6, 6, 28, (Math.PI / 2) - ((Math.PI / 2 * this.water) / 100), (Math.PI / 2), false);
+                context.arc(6, 6, 7, (Math.PI / 2), (Math.PI / 2) - ((Math.PI / 2 * this.waterLevel) / 100), true);
+                context.arc(6, 6, 28, (Math.PI / 2) - ((Math.PI / 2 * this.waterLevel) / 100), (Math.PI / 2), false);
             }
 
             context.fill();
