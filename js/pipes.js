@@ -1,6 +1,6 @@
 let config = require('./config');
-let Straight = require('./straight');
-let Elbow = require('./elbow');
+let Straight = require('./Straight');
+let Elbow = require('./Elbow');
 
 class Pipes {
     constructor() {

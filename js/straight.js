@@ -1,4 +1,4 @@
-let Pipe = require('./pipe');
+let Pipe = require('./Pipe');
 let config = require('./config');
 
 let positions = {

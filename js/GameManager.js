@@ -1,8 +1,8 @@
 let config = require('./config');
-let Grid = require('./grid');
-let Pipes = require('./pipes');
-let RenderManager = require('./render_manager');
-let ClickController = require('./click_controller');
+let Grid = require('./Grid');
+let Pipes = require('./Pipes');
+let RenderManager = require('./RenderManager');
+let ClickController = require('./ClickController');
 
 let exitToEntry = {
     'top': 'bottom',
