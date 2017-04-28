@@ -1,6 +1,6 @@
-let config = require('./config');
-let Straight = require('./Straight');
-let Elbow = require('./Elbow');
+import config from './config';
+import Straight from './Straight';
+import Elbow from './Elbow';
 
 class Pipes {
     constructor() {
@@ -48,4 +48,4 @@ class Pipes {
     }
 }
 
-module.exports = Pipes;
+export default Pipes;

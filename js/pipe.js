@@ -1,4 +1,4 @@
-let config = require('./config');
+import config from './config';
 
 class Pipe {
     constructor(col, row) {
@@ -43,4 +43,4 @@ class Pipe {
     }
 }
 
-module.exports = Pipe;
+export default Pipe;

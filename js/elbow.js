@@ -1,5 +1,5 @@
-let Pipe = require('./Pipe');
-let config = require('./config');
+import Pipe from './Pipe';
+import config from './config';
 
 let positions = {
     0: 'left-top',
@@ -97,4 +97,4 @@ class Elbow extends Pipe {
     }
 }
 
-module.exports = Elbow;
+export default Elbow;

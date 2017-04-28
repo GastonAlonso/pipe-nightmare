@@ -1,4 +1,4 @@
-let config = require('./config');
+import config from './config';
 
 const GRID_LINE_WIDTH = 0.7;
 const DEFAULT_LINE_WIDTH = 1.0;
@@ -49,4 +49,4 @@ class Grid {
     }
 }
 
-module.exports = Grid;
+export default Grid;

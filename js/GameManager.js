@@ -1,8 +1,8 @@
-let config = require('./config');
-let Grid = require('./Grid');
-let Pipes = require('./Pipes');
-let RenderManager = require('./RenderManager');
-let ClickController = require('./ClickController');
+import config from './config';
+import Grid from './Grid';
+import Pipes from './Pipes';
+import RenderManager from './RenderManager';
+import ClickController from './ClickController';
 
 let exitToEntry = {
     'top': 'bottom',
@@ -75,4 +75,4 @@ class GameManager {
     }
 }
 
-module.exports = GameManager;
+export default GameManager;

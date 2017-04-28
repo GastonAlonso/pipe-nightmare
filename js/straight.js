@@ -1,5 +1,5 @@
-let Pipe = require('./Pipe');
-let config = require('./config');
+import Pipe from './Pipe';
+import config from './config';
 
 let positions = {
     0: 'vertical',
@@ -84,4 +84,4 @@ class Straight extends Pipe {
     }
 }
 
-module.exports = Straight;
+export default Straight;

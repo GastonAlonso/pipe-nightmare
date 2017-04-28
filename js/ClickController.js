@@ -16,4 +16,4 @@ class ClickController {
     }
 }
 
-module.exports = ClickController;
+export default ClickController;

@@ -1,4 +1,4 @@
-let config = require('./config');
+import config from './config';
 
 const FPS_INTERVAL = 1000 / config.FPS;
 let startTime;
@@ -34,4 +34,4 @@ class RenderManager {
     }
 }
 
-module.exports = RenderManager;
+export default RenderManager;
