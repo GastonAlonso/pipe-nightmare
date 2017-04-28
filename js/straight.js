@@ -20,16 +20,6 @@ class Straight extends Pipe {
         super(col, row);
     }
 
-    fill(entry, done) {
-        this.entry = entry;
-
-        super(() => {
-            let exit = this.getExit(entry);
-
-            done(exit)
-        });
-    }
-
     hasEntry(entry) {
         return openings[this.rotation].indexOf(entry) > -1;
     }

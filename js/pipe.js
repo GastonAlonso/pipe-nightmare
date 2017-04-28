@@ -20,12 +20,16 @@ class Pipe {
         this.rotation = Math.floor(Math.random() * 4);
     }
 
-    fill(done) {
+    fill(entry, done) {
+        this.entry = entry;
+
         let waterFill = setInterval(() => {
             if (this.waterLevel >= 100) {
+                let exit = this.getExit(entry);
+
                 clearInterval(waterFill);
 
-                return done();
+                return done(exit);
             }
 
             this.waterLevel += 10;
