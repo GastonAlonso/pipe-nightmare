@@ -1,4 +1,4 @@
-import config          from './config';
+import { START_PIPE }  from './config';
 import Grid            from './Grid';
 import Pipes           from './Pipes';
 import RenderManager   from './RenderManager';
@@ -20,7 +20,7 @@ class GameManager {
         this.renderManager   = new RenderManager(this.canvas, this.grid, this.pipes);
         this.clickController = new ClickController(this.canvas, this.pipes);
 
-        this.coords = config.START_PIPE;
+        this.coords = START_PIPE;
 
         this.startWaterFlow();
     }

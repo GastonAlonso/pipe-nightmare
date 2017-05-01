@@ -1,5 +1,8 @@
 import Pipe from './Pipe';
-import config from './config';
+import {
+    CELL_SIZE,
+    WATER_COLOR
+} from './config';
 
 let positions = {
     0: 'left-top',
@@ -52,15 +55,15 @@ class Elbow extends Pipe {
                 context.translate(this.xOffset, this.yOffset);
                 break;
             case 'right-top':
-                context.translate(this.xOffset + config.CELL_SIZE, this.yOffset);
+                context.translate(this.xOffset + CELL_SIZE, this.yOffset);
                 context.rotate(Math.PI / 2);
                 break;
             case 'right-bottom':
-                context.translate(this.xOffset + config.CELL_SIZE, this.yOffset + config.CELL_SIZE);
+                context.translate(this.xOffset + CELL_SIZE, this.yOffset + CELL_SIZE);
                 context.rotate(Math.PI);
                 break;
             case 'left-bottom':
-                context.translate(this.xOffset, this.yOffset + config.CELL_SIZE);
+                context.translate(this.xOffset, this.yOffset + CELL_SIZE);
                 context.rotate(Math.PI * 1.5);
         }
 
@@ -77,7 +80,7 @@ class Elbow extends Pipe {
 
     renderWaterLevel(context) {
         if (this.waterLevel > 0) {
-            context.fillStyle = config.WATER_COLOR;
+            context.fillStyle = WATER_COLOR;
             context.beginPath();
 
             // Fill water one way or the other depending on position and entry.

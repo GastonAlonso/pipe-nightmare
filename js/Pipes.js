@@ -1,6 +1,10 @@
-import config from './config';
 import Straight from './Straight';
 import Elbow from './Elbow';
+import {
+    GRID_WIDTH,
+    GRID_HEIGHT,
+    CELL_SIZE
+} from './config';
 
 class Pipes {
     constructor() {
@@ -8,8 +12,8 @@ class Pipes {
     }
 
     populateCells() {
-        let numRows = config.GRID_HEIGHT / config.CELL_SIZE;
-        let numCols = config.GRID_WIDTH / config.CELL_SIZE;
+        let numRows = GRID_HEIGHT / CELL_SIZE;
+        let numCols = GRID_WIDTH / CELL_SIZE;
 
         this.cells = [];
 

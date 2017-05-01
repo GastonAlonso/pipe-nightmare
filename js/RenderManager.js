@@ -1,6 +1,10 @@
-import config from './config';
+import {
+    GRID_WIDTH,
+    GRID_HEIGHT,
+    FPS
+} from './config';
 
-const FPS_INTERVAL = 1000 / config.FPS;
+const FPS_INTERVAL = 1000 / FPS;
 let startTime;
 
 class RenderManager {
@@ -25,7 +29,7 @@ class RenderManager {
             startTime = now - (elapsed % FPS_INTERVAL);
 
             // Clear canvas.
-            this.context.clearRect(0, 0, config.GRID_WIDTH, config.GRID_HEIGHT);
+            this.context.clearRect(0, 0, GRID_WIDTH, GRID_HEIGHT);
 
             // Render all modules.
             this.grid.render(this.context);

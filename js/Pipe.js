@@ -1,4 +1,7 @@
-import config from './config';
+import {
+    CELL_SIZE,
+    FILL_SPEED
+} from './config';
 
 class Pipe {
     constructor(col, row) {
@@ -12,8 +15,8 @@ class Pipe {
     }
 
     calculateOffsets() {
-        this.xOffset = this.col * config.CELL_SIZE;
-        this.yOffset = this.row * config.CELL_SIZE;
+        this.xOffset = this.col * CELL_SIZE;
+        this.yOffset = this.row * CELL_SIZE;
     }
 
     setInitialRotation() {
@@ -33,7 +36,7 @@ class Pipe {
             }
 
             this.waterLevel += 10;
-        }, config.FILL_SPEED);
+        }, FILL_SPEED);
     }
 
     rotate() {
