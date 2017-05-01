@@ -1,31 +1,33 @@
-import config from './config';
-import Grid from './Grid';
-import Pipes from './Pipes';
-import RenderManager from './RenderManager';
+import config          from './config';
+import Grid            from './Grid';
+import Pipes           from './Pipes';
+import RenderManager   from './RenderManager';
 import ClickController from './ClickController';
 
-let exitToEntry = {
-    'top': 'bottom',
+const exitToEntryMap = {
+    'top':    'bottom',
     'bottom': 'top',
-    'left': 'right',
-    'right': 'left'
+    'left':   'right',
+    'right':  'left'
 };
 
 class GameManager {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
-        this.grid = new Grid();
-        this.pipes = new Pipes();
+        this.grid   = new Grid();
+        this.pipes  = new Pipes();
 
-        this.renderManager = new RenderManager(this.canvas, this.grid, this.pipes);
-        this.clickManager = new ClickController(this.canvas, this.pipes);
+        this.renderManager   = new RenderManager(this.canvas, this.grid, this.pipes);
+        this.clickController = new ClickController(this.canvas, this.pipes);
+
+        this.coords = config.START_PIPE;
 
         this.startWaterFlow();
     }
 
     startWaterFlow() {
-        let { col, row } = this.coords =  config.START_PIPE;
-        let startPipe = this.pipes.at(col, row);
+        const { col, row } = this.coords;
+        const startPipe    = this.pipes.at(col, row);
 
         // Set the rotation of the first pipe,
         // to take water from the top right corner.
@@ -37,41 +39,38 @@ class GameManager {
 
     fillPipe(entry, pipe) {
         pipe.fill(entry, exit => {
-            let nextPipe = this.getNextPipe(exit);
-            let nextEntry = exitToEntry[exit];
+            // set the next coords depending on exit
+            this.coords = this.getNextCoords(exit);
 
+            const { col, row } = this.coords;
+
+            // get next entry point and next pipe
+            const nextEntry = exitToEntryMap[exit];
+            const nextPipe  = this.pipes.at(col, row);
+
+            // if there is a matching pipe, fill it
             if (nextPipe && nextPipe.hasEntry(nextEntry)) {
                 return this.fillPipe(nextEntry, nextPipe);
             }
 
+            // otherwise game over
             console.log('Game Over');
         });
     }
 
-    getNextPipe(exit) {
-        let { col, row } = this.coords = this.getNextCoords(exit);
-
-        return this.pipes.at(col, row);
-    }
-
     getNextCoords(exit) {
-        let { col, row } = this.coords;
+        const { col, row } = this.coords;
 
         switch(exit) {
             case 'left':
-                --col;
-                break;
+                return { col: col - 1, row };
             case 'right':
-                ++col;
-                break;
+                return { col: col + 1, row };
             case 'top':
-                --row;
-                break;
+                return { col, row: row - 1 };
             case 'bottom':
-                ++row;
+                return { col, row: row + 1 };
         }
-
-        return { col: col, row: row };
     }
 }
 
