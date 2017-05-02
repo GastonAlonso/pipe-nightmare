@@ -5,16 +5,14 @@ import {
 } from './config';
 
 const FPS_INTERVAL = 1000 / FPS;
-let startTime;
 
 class RenderManager {
     constructor(canvas, grid, pipes) {
-        this.canvas = canvas;
-        this.grid = grid;
+        this.grid  = grid;
         this.pipes = pipes;
 
-        startTime = Date.now();
-        this.context = this.canvas.getContext('2d');
+        this.startTime = Date.now();
+        this.context   = canvas.getContext('2d');
 
         this.render();
     }
@@ -22,11 +20,11 @@ class RenderManager {
     render() {
         window.requestAnimationFrame(this.render.bind(this));
 
-        let now = Date.now();
-        let elapsed = now - startTime;
+        const currentTime = Date.now();
+        const timeElapsed = currentTime - this.startTime;
 
-        if (elapsed > FPS_INTERVAL) {
-            startTime = now - (elapsed % FPS_INTERVAL);
+        if (timeElapsed > FPS_INTERVAL) {
+            this.startTime = currentTime - (timeElapsed % FPS_INTERVAL);
 
             // Clear canvas.
             this.context.clearRect(0, 0, GRID_WIDTH, GRID_HEIGHT);
