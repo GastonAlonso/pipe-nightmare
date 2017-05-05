@@ -1,4 +1,4 @@
-import { START_PIPE }  from './config';
+import { START_PIPE }  from './constants/settings';
 import Grid            from './Grid';
 import Pipes           from './Pipes';
 import RenderManager   from './RenderManager';

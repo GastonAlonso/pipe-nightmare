@@ -1,7 +1,7 @@
 import {
     CELL_SIZE,
     FILL_SPEED
-} from './config';
+} from './constants/settings';
 
 class Pipe {
     constructor(col, row) {

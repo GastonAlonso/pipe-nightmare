@@ -2,7 +2,7 @@ import {
     GRID_WIDTH,
     GRID_HEIGHT,
     FPS
-} from './config';
+} from './constants/settings';
 
 const FPS_INTERVAL = 1000 / FPS;
 

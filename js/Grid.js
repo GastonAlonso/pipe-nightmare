@@ -2,7 +2,7 @@ import {
     GRID_WIDTH,
     GRID_HEIGHT,
     CELL_SIZE
-} from './config';
+} from './constants/settings';
 
 const GRID_LINE_WIDTH = 0.7;
 const DEFAULT_LINE_WIDTH = 1.0;

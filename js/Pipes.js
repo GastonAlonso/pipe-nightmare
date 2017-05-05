@@ -4,7 +4,7 @@ import {
     GRID_WIDTH,
     GRID_HEIGHT,
     CELL_SIZE
-} from './config';
+} from './constants/settings';
 
 class Pipes {
     constructor() {

@@ -2,7 +2,7 @@ import Pipe from './Pipe';
 import {
     CELL_SIZE,
     WATER_COLOR
-} from './config';
+} from './constants/settings';
 
 let positions = {
     0: 'vertical',
